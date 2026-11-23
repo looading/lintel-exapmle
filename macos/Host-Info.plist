@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDevelopmentRegion</key>
+    <string>zh_CN</string>
+    <key>CFBundleDisplayName</key>
+    <string>世界时钟</string>
+    <key>CFBundleExecutable</key>
+    <string>lintel-world-clock</string>
+    <key>CFBundleIdentifier</key>
+    <string>dev.lintel.world-clock</string>
+    <key>CFBundleName</key>
+    <string>世界时钟</string>
+    <key>CFBundlePackageType</key>
+    <string>APPL</string>
+    <key>CFBundleShortVersionString</key>
+    <string>0.1.0</string>
+    <key>CFBundleVersion</key>
+    <string>1</string>
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleTypeRole</key>
+            <string>Viewer</string>
+            <key>CFBundleURLName</key>
+            <string>dev.lintel.world-clock.open</string>
+            <key>CFBundleURLSchemes</key>
+            <array><string>lintel-world-clock</string></array>
+        </dict>
+    </array>
+    <key>NSAppleEventsUsageDescription</key>
+    <string>计时结束后，世界时钟会暂停你指定的媒体应用。</string>
+    <key>NSHighResolutionCapable</key>
+    <true/>
+</dict>
+</plist>

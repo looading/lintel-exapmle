@@ -1,0 +1,55 @@
+name: ClockExtensions
+options:
+  minimumXcodeGenVersion: 2.47.0
+  developmentLanguage: zh_CN
+settings:
+  base:
+    MACOSX_DEPLOYMENT_TARGET: "15.0"
+    SWIFT_VERSION: "5.0"
+    CODE_SIGNING_ALLOWED: "NO"
+    APPLICATION_EXTENSION_API_ONLY: "YES"
+    GENERATE_INFOPLIST_FILE: "YES"
+targets:
+  ClockWidget:
+    type: app-extension
+    platform: macOS
+    sources: [ClockCity.swift, ClockWidget.swift]
+    info:
+      path: ClockWidget-Info.plist
+      properties:
+        CFBundleDisplayName: 城市时间
+        CFBundleVersion: "1"
+        CFBundleShortVersionString: "0.1.0"
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.lintel.world-clock.widget
+    dependencies:
+      - sdk: AppIntents.framework
+      - sdk: SwiftUI.framework
+      - sdk: WidgetKit.framework
+  ClockIntents:
+    type: extensionkit-extension
+    platform: macOS
+    sources: [ClockCity.swift, ClockIntents.swift]
+    info:
+      path: ClockIntents-Info.plist
+      properties:
+        CFBundleDisplayName: 世界时钟操作
+        CFBundleVersion: "1"
+        CFBundleShortVersionString: "0.1.0"
+        EXAppExtensionAttributes:
+          EXExtensionPointIdentifier: com.apple.appintents-extension
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: dev.lintel.world-clock.intents
+    dependencies:
+      - sdk: AppIntents.framework
+      - sdk: AppKit.framework
+schemes:
+  ClockExtensions:
+    build:
+      targets:
+        ClockWidget: all
+        ClockIntents: all
