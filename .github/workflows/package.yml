@@ -28,14 +28,22 @@ jobs:
           persist-credentials: false
 
       - name: Prepare macOS toolchain
-        env:
-          HOMEBREW_NO_AUTO_UPDATE: '1'
         run: |
           rustup toolchain install "$RUST_VERSION" --profile minimal --target aarch64-apple-darwin
           printf 'RUSTUP_TOOLCHAIN=%s\n' "$RUST_VERSION" >> "$GITHUB_ENV"
-          brew install xcodegen
           xcodebuild -version
-          xcodegen --version
+
+      - name: Install XcodeGen 2.48.0
+        run: |
+          archive="$RUNNER_TEMP/xcodegen.zip"
+          curl --fail --location --retry 3 --silent --show-error \
+            https://github.com/yonaskolb/XcodeGen/releases/download/2.48.0/xcodegen.zip \
+            --output "$archive"
+          printf '%s  %s\n' 620c9f0dc10849f94728ab5df52d225ebab8187439dd6fee1925e59e80dff892 "$archive" \
+            | shasum -a 256 -c
+          ditto -x -k "$archive" "$RUNNER_TEMP"
+          "$RUNNER_TEMP/xcodegen/bin/xcodegen" --version
+          printf '%s\n' "$RUNNER_TEMP/xcodegen/bin" >> "$GITHUB_PATH"
 
       - name: Test and build the release binary
         run: |
