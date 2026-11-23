@@ -1,0 +1,108 @@
+name: Package desktop apps
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  RUST_VERSION: '1.94.1'
+  CARGO_BUILD_JOBS: '2'
+
+jobs:
+  macos:
+    name: macOS arm64
+    runs-on: macos-26
+    timeout-minutes: 45
+    env:
+      MACOSX_DEPLOYMENT_TARGET: '15.0'
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Prepare macOS toolchain
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: '1'
+        run: |
+          rustup toolchain install "$RUST_VERSION" --profile minimal --target aarch64-apple-darwin
+          printf 'RUSTUP_TOOLCHAIN=%s\n' "$RUST_VERSION" >> "$GITHUB_ENV"
+          brew install xcodegen
+          xcodebuild -version
+          xcodegen --version
+
+      - name: Test and build the release binary
+        run: |
+          cargo test --release --locked --target aarch64-apple-darwin
+          cargo build --release --locked --target aarch64-apple-darwin --bin lintel-world-clock
+
+      - name: Bundle, verify and archive the app
+        run: |
+          app="$RUNNER_TEMP/世界时钟.app"
+          binary="$PWD/target/aarch64-apple-darwin/release/lintel-world-clock"
+          CLOCK_BINARY="$binary" scripts/bundle-macos.sh "$app"
+          codesign --verify --deep --strict "$app"
+          for executable in \
+            "$app/Contents/MacOS/lintel-world-clock" \
+            "$app/Contents/PlugIns/ClockWidget.appex/Contents/MacOS/ClockWidget" \
+            "$app/Contents/Extensions/ClockIntents.appex/Contents/MacOS/ClockIntents"; do
+            lipo -verify_arch arm64 "$executable"
+          done
+          ditto -c -k --keepParent "$app" "$RUNNER_TEMP/world-clock-macos-arm64.zip"
+          unzip -tq "$RUNNER_TEMP/world-clock-macos-arm64.zip"
+
+      - name: Upload macOS app
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          path: ${{ runner.temp }}/world-clock-macos-arm64.zip
+          archive: false
+          if-no-files-found: error
+          retention-days: 30
+
+  windows:
+    name: Windows x64
+    runs-on: windows-2025
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Prepare Windows toolchain
+        shell: pwsh
+        run: |
+          rustup toolchain install $env:RUST_VERSION --profile minimal --target x86_64-pc-windows-msvc
+          if ($LASTEXITCODE -ne 0) { throw "rustup failed with exit code $LASTEXITCODE." }
+          "RUSTUP_TOOLCHAIN=$env:RUST_VERSION" >> $env:GITHUB_ENV
+
+      - name: Test the Windows release
+        shell: pwsh
+        env:
+          RUSTFLAGS: '-Ctarget-feature=+crt-static'
+        run: cargo test --release --locked --target x86_64-pc-windows-msvc
+
+      - name: Build and verify the portable package
+        shell: pwsh
+        run: |
+          $zip = Join-Path $env:RUNNER_TEMP 'world-clock-windows-x64.zip'
+          & .\scripts\bundle-windows.ps1 -OutputZip $zip
+          $verify = Join-Path $env:RUNNER_TEMP 'windows-package-check'
+          Expand-Archive -LiteralPath $zip -DestinationPath $verify
+          $exe = Join-Path $verify 'world-clock-windows-x64\world-clock.exe'
+          if (!(Test-Path -LiteralPath $exe -PathType Leaf) -or (Get-Item -LiteralPath $exe).Length -eq 0) {
+            throw 'The Windows archive does not contain world-clock.exe.'
+          }
+
+      - name: Upload Windows portable app
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          path: ${{ runner.temp }}/world-clock-windows-x64.zip
+          archive: false
+          if-no-files-found: error
+          retention-days: 30

@@ -71,3 +71,14 @@ scripts/bundle-macos.sh
 ```
 
 默认输出 `target/macos/世界时钟.app`。脚本会构建 iced 主程序、WidgetKit 扩展和 App Intents 扩展，并验证嵌套签名。可以通过第一个参数指定其他输出路径，通过 `CLOCK_SIGN_IDENTITY` 指定签名身份。
+
+## GitHub Actions 构建产物
+
+[Package desktop apps](https://github.com/looading/lintel-exapmle/actions/workflows/package.yml) 会在推送到 `main`、向 `main` 提交 PR 或推送 `v*` 标签时运行，也可以在 Actions 页面手动触发。在构建记录底部的 **Artifacts** 下载对应平台的 ZIP。
+
+| 产物 | 内容 |
+| --- | --- |
+| `world-clock-macos-arm64.zip` | Apple Silicon 的 `世界时钟.app`，包含 WidgetKit 和 App Intents 扩展，使用临时签名。 |
+| `world-clock-windows-x64.zip` | Windows x64 便携版 `world-clock.exe`，静态链接 VC 运行库。 |
+
+工作流在两个平台分别运行测试，并检查打包结果。产物保留 30 天。
