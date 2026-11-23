@@ -60,7 +60,7 @@ jobs:
             "$app/Contents/MacOS/lintel-world-clock" \
             "$app/Contents/PlugIns/ClockWidget.appex/Contents/MacOS/ClockWidget" \
             "$app/Contents/Extensions/ClockIntents.appex/Contents/MacOS/ClockIntents"; do
-            lipo -verify_arch arm64 "$executable"
+            lipo "$executable" -verify_arch arm64
           done
           ditto -c -k --keepParent "$app" "$RUNNER_TEMP/world-clock-macos-arm64.zip"
           unzip -tq "$RUNNER_TEMP/world-clock-macos-arm64.zip"
